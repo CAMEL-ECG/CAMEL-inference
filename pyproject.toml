@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["run_camel"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+camel = ["model_registry.yaml"]
+
+[project]
+name = "camel-inference"
+version = "0.1.0"
+description = "Inference-only CLI for CAMEL ECG-language checkpoints"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+  { name = "CAMEL contributors" }
+]
+dependencies = [
+  "numpy",
+  "scipy",
+  "pyyaml",
+  "torch",
+  "transformers",
+  "peft",
+  "accelerate",
+  "sentencepiece",
+  "protobuf"
+]
+
+[project.scripts]
+camel-infer = "run_camel:main"

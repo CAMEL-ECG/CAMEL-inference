@@ -1,0 +1,9 @@
+# MacOS
+.DS_Store
+
+# Python
+/.env
+__pycache__
+# Ignore model checkpoints
+checkpoints/
+*.pt
