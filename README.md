@@ -25,8 +25,16 @@ Only `run_camel.py` is intended as a public entrypoint. Modules under `src/camel
 
 ```bash
 conda create -n camel python=3.10 -y
-conda activate ame
+conda activate camel
 pip install -e .
+```
+
+## Checkpoints
+
+Checkpoints must be downloaded with the repository script:
+
+```bash
+bash scripts/download_checkpoints.sh
 ```
 
 ## Usage
