@@ -1,15 +1,8 @@
 from typing import Optional, List, Dict, Any
 import numpy as np
-import wfdb
 import torch
 
-LEAD_KEEP = {
-    1: ['II'],
-    2: ['I', 'II'],
-    3: ['I', 'II', 'V2'],
-    4: ['I', 'II', 'III', 'V2'],
-    6: ['I', 'II', 'III', 'aVR', 'aVL', 'aVF'],
-}
+from read_ecg import load_record
 
 _LEAD_SYNONYMS: Dict[str, str] = {
     # Limb
@@ -93,10 +86,6 @@ def apply_post_ops(segments: np.ndarray, ops: List[NormOp], lead_name: str,
             np.clip(x, mn, mx, out=x)
     return x.astype(np.float32, copy=False)
 
-def load_record(ecg_path):
-    record = wfdb.rdrecord(ecg_path)
-    return record
-
 def _segment_data(ecg_signal: np.ndarray, raw_fs: int) -> np.ndarray:
     """
     Segment 1D signal sampled at ``raw_fs`` into 1-second clips and resample to 256 samples.
@@ -161,8 +150,8 @@ def _apply_filters(signal_1d, fs: int):
     x = sosfiltfilt(sos, x)
     return x.astype('float32')
 
-def get_waveform(ecg_path:str, process:bool = True, leads: Optional[List[str]] = None,
-                 start_ind = None, end_ind = None, norm: str = "nonfinite_to_zero,clip") -> Dict[str, Any]:
+def get_waveform(device:torch.device, ecg_path:str, start_sec = None, end_sec = None, leads: Optional[List[str]] = None,
+                 process:bool = False, norm: str = "nonfinite_to_zero,clip") -> Dict[str, Any]:
     """
     Run ECG preprocessing pipeline (Step II): raw → filter → segment → normalize → storage.
     
@@ -188,18 +177,14 @@ def get_waveform(ecg_path:str, process:bool = True, leads: Optional[List[str]] =
     # Convert to dict format
     ecg_dict = {}
     try:
-        df, sig_names, original_fs = load_record(ecg_path)
-        if start_ind is not None and end_ind is not None: df = df[start_ind:end_ind]
+        df, sig_names, original_fs = load_record(ecg_path, start_sec, end_sec, leads)
+        
         # Process each lead in the record
         for i, raw_name in enumerate(sig_names):
             canon = to_canonical_lead(raw_name)
             if not canon:
                 print('to_canonical_lead')
                 continue
-            if leads:
-                req = [to_canonical_lead(l) for l in leads]
-                if canon not in req:
-                    continue
             x = df[:, i].astype('float32', copy=False)
 
             if process:
@@ -210,7 +195,7 @@ def get_waveform(ecg_path:str, process:bool = True, leads: Optional[List[str]] =
             segs = _segment_data(x, original_fs)
             segs = apply_post_ops(segs, ops, canon)
 
-            lead_tensor = torch.from_numpy(segs).to(torch.float32)
+            lead_tensor = torch.from_numpy(segs).to(torch.float32).to(device)
             if not (torch.any(lead_tensor.isnan())):
                 lead_tensor = lead_tensor.nan_to_num()
 

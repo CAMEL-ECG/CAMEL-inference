@@ -1,13 +1,14 @@
 import argparse
-from src.camel.camel_model import CAMEL
+from camel.camel_model import CAMEL
 
 def main():
     parser = argparse.ArgumentParser(description="CAMEL")
-    parser.add_argument("--mode", type=str, choices=['forecast', 'base', 'ecgbench'], required=True)
-    parser.add_argument("--text", type=str, required=True)
-    parser.add_argument("--ecg", type=str, required=True)
-    parser.add_argument("--nleads", type=int, choices=[1, 2, 3, 4, 6], default=None)
-    parser.add_argument("--device", type=int, default=0)
+    parser.add_argument("--mode", type=str, choices=['forecast', 'base', 'ecgbench'], default='base')
+    parser.add_argument("--device", type=str, default='cuda:0')
+    parser.add_argument("--json", type=str, default=None)
+    parser.add_argument("--text", type=str, default=None)
+    parser.add_argument("--ecgs", type=str, default=None, nargs='+')
+    parser.add_argument("--ecg-configs", type=str, default=None, nargs='+')
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument(
         "--top-k",
@@ -37,16 +38,12 @@ def main():
         help="Maximum number of tokens to generate per sample.",
     )
     args = parser.parse_args()
-        
-    # Initialize model
-    if args.mode == 'base':
-        ckpt = 'checkpoints/camel_base.pt'
-    elif args.mode == 'ecgbench':
-        ckpt = 'checkpoints/camel_ecginstruct.pt'
-    elif args.mode == 'forecast':
-        ckpt = 'checkpoints/camel_forecast.pt'
-    model = CAMEL(ckpt=ckpt, device=args.device)
-    model.run(input_text=args.text, data=args.ecg, args=args)
+    
+    model = CAMEL(mode=args.mode, device=args.device)
+    output, prompt = model.run(args)
+    
+    print(f'Prompt: {prompt}')
+    print(f'Prediction: {output}')
 
 if __name__ == "__main__":
     main()

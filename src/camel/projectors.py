@@ -13,6 +13,25 @@ ProjectorBuilder = Callable[[int, int], nn.Module]
 
 _PROJECTOR_REGISTRY: Dict[str, ProjectorBuilder] = {}
 
+def register_projector(name: str) -> Callable[[ProjectorBuilder], ProjectorBuilder]:
+    """Decorator to register a projector builder under a unique name."""
+    key = name.strip().lower()
+
+    def _decorator(fn: ProjectorBuilder) -> ProjectorBuilder:
+        if not callable(fn):
+            raise TypeError("Projector builder must be callable.")
+        if key in _PROJECTOR_REGISTRY:
+            raise ValueError(f"Projector '{name}' is already registered.")
+        _PROJECTOR_REGISTRY[key] = fn
+        return fn
+
+    return _decorator
+
+@register_projector("linear")
+def _linear_projector(in_dim: int, out_dim: int) -> nn.Module:
+    """Single linear adapter (current default)."""
+    return nn.Linear(in_dim, out_dim, bias=True)
+
 def available_projectors() -> Iterable[str]:
     """Return sorted projector names."""
     return sorted(_PROJECTOR_REGISTRY.keys())

@@ -8,7 +8,7 @@ import functools
 import os
 import torch
 
-from ecg_attention_masks import ECGBlockLayout
+from camel.ecg_attention_masks import ECGBlockLayout
 
 _ASSERTIONS_ENABLED = os.getenv("ASSERTIONS") == "1"
 

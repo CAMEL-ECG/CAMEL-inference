@@ -4,6 +4,9 @@
 # Python
 /.env
 __pycache__
+
 # Ignore model checkpoints
 checkpoints/
 *.pt
+
+*.egg-info

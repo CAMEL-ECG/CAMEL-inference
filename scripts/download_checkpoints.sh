@@ -11,7 +11,7 @@ python3 - <<'PY'
 import os, shutil
 from huggingface_hub import hf_hub_download
 
-repo = "seewon/CAMEL"
+repo = "CAMEL-ECG/CAMEL"
 files = [
     "camel_base.pt",
     "camel_ecginstruct.pt",

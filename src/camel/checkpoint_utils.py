@@ -19,7 +19,7 @@ from peft import (
     set_peft_model_state_dict,
 )
 
-from training_setup import is_main_process
+from camel.training_setup import is_main_process
 
 def _module_has_dtensor_params(mod: nn.Module) -> bool:
     """

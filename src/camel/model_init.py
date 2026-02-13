@@ -9,7 +9,7 @@ from peft import (
     TaskType,
 )
 
-from ecg_gemma_model import ECGGemmaPrefix as ECGModelPrefix
+from camel.ecg_gemma_model import ECGGemmaPrefix as ECGModelPrefix
 
 def attach_lora(
     model: nn.Module,

@@ -10,12 +10,12 @@ from typing import Dict, Optional, List
 import torch.distributed as dist
 from transformers import AutoTokenizer
 
-from ecg_text_packing import (
+from camel.ecg_text_packing import (
     ECGSpecialTokenCatalog,
     PackingSchema,
     PromptTokens,
 )
-from model_registry import ModelConfig, ModelRegistryError, load_registry
+from camel.model_registry import ModelConfig, ModelRegistryError, load_registry
 
 def is_main_process() -> bool:
     """Return True for rank 0 (or standalone execution)."""

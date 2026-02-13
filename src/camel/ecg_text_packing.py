@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional, Any
 from transformers import PreTrainedTokenizer
 
-from assertions import (
+from camel.assertions import (
     assert_ecg_catalog_valid,
     assert_normalized_role_canonical,
     assert_turn_parts_structure_valid,
@@ -12,7 +12,7 @@ from assertions import (
     assert_leads_canonical_and_ordered,
     assert_waveform_shapes_valid,
 )
-from prompt_renderers import turn_wrappers
+from camel.prompt_renderers import turn_wrappers
 
 # NOTE: Local BOS/EOS assertions are implemented at the bottom of this file.
 @dataclass(frozen=True)
@@ -140,6 +140,88 @@ def _normalize_role(role_value: Any, schema: PackingSchema) -> str:
         assert_normalized_role_canonical(out, schema)
         return out
     raise ValueError(f"Unknown conversation role '{role_value}' for schema '{schema.conversation.format_id}'.")
+
+def _normalize_conversation(
+    convo: List[Dict[str, Any]],
+    schema: PackingSchema,
+    system_text: Optional[str],
+    developer_text: Optional[str],
+) -> List[Dict[str, Any]]:
+    if not convo:
+        raise ValueError("Conversation must contain at least one turn.")
+    has_system_turn = False
+    has_developer_turn = False
+    for turn in convo:
+        if not isinstance(turn, dict):
+            continue
+        role_val = turn.get("from")
+        if role_val is None and "role" in turn:
+            role_val = turn.get("role")
+        role_lower = str(role_val or "").strip().lower()
+        if role_lower == "system":
+            has_system_turn = True
+        elif role_lower == "developer":
+            has_developer_turn = True
+    normalized: List[Dict[str, Any]] = []
+    if system_text and system_text.strip() and not has_system_turn:
+        sys = system_text.strip()
+        normalized.append({
+            "role": "system",
+            "content": [{"type": "text", "text": sys}],
+        })
+    if developer_text and developer_text.strip() and not has_developer_turn:
+        dev = developer_text.strip()
+        normalized.append({
+            "role": "developer",
+            "content": [{"type": "text", "text": dev}],
+        })
+    for idx, turn in enumerate(convo):
+        role_val = turn.get("from")
+        if role_val is None:
+            role_val = turn.get("role")
+        role = _normalize_role(role_val, schema)
+        content = turn.get("content")
+        if not isinstance(content, list):
+            raise ValueError(f"Turn {idx} content must be a list of items.")
+        normalized.append({"role": role, "content": content})
+
+    if schema.conversation.merge_system_with_first_user:
+        system_items: List[Dict[str, Any]] = []
+        out: List[Dict[str, Any]] = []
+        first_user_idx: Optional[int] = None
+        for turn in normalized:
+            if turn["role"] == "system":
+                system_items.extend(list(turn["content"]))
+                continue
+            if turn["role"] == "developer":
+                raise ValueError("Developer turn present but merge_system_with_first_user is true.")
+            if first_user_idx is None and turn["role"] == schema.prompt.user_role:
+                first_user_idx = len(out)
+            out.append(turn)
+
+        if system_items:
+            if first_user_idx is None:
+                raise ValueError("System turn present but no user turn to merge into.")
+            user_turn = out[first_user_idx]
+            user_turn["content"] = list(system_items) + list(user_turn["content"])
+
+        if not out:
+            raise ValueError("Conversation must contain at least one non-system turn.")
+        if out[0]["role"] != schema.prompt.user_role:
+            raise ValueError("Conversation must start with a user/human turn.")
+        return out
+
+    out = list(normalized)
+    if not out:
+        raise ValueError("Conversation must contain at least one turn.")
+    system_turns = [t for t in out if t["role"] == "system"]
+    developer_turns = [t for t in out if t["role"] == "developer"]
+    non_preamble_turns = [t for t in out if t["role"] not in ("system", "developer")]
+    if not non_preamble_turns:
+        raise ValueError("Conversation must contain at least one non-system/developer turn.")
+    if non_preamble_turns[0]["role"] != schema.prompt.user_role:
+        raise ValueError("Conversation must start with a user/human turn.")
+    return system_turns + developer_turns + non_preamble_turns
 
 
 def _maybe_strip_content(text: str, canonical_role: str, schema: PackingSchema) -> str:

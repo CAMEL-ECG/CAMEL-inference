@@ -12,8 +12,8 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from assertions import assert_wrapper_embed_length, assert_rest_length_nonnegative, assert_tensor_dtype
-from projectors import build_projector
+from camel.assertions import assert_wrapper_embed_length, assert_rest_length_nonnegative, assert_tensor_dtype
+from camel.projectors import build_projector
 
 class ECGNonFiniteInputError(RuntimeError):
     """Raised when the conv encoder input contains NaN or Inf values."""

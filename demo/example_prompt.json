@@ -1,0 +1,8 @@
+[
+  { "type": "text", "text": "You are given two ECG waveforms of a same patient from two different time points."},
+  { "type": "text", "text": "This is the first ECG."},
+  { "type": "ecg", "ecg": "demo/12585_hr" },
+  { "type": "text", "text": "This is the first ECG." },
+  { "type": "ecg", "ecg": "demo/12646_hr" },
+  { "type": "text", "text": "Has non-diagnostic t abnormalities been resolved in the recent tracing compared to the previous one?"}
+]

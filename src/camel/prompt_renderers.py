@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, List, Tuple
 from transformers import PreTrainedTokenizer
 
-from assertions import (
+from camel.assertions import (
     assert_tokenization_cursor_matches,
     assert_model_spans_valid,
     assert_eos_appended,

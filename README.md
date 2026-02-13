@@ -4,12 +4,6 @@ Inference-only repository for running CAMEL ECG-language checkpoints.
 
 Only `run_camel.py` is intended as a public entrypoint. Modules under `src/camel/` are internal implementation details and may change.
 
-## Scope
-
-- Inference only (no training workflow exposed)
-- Checkpoint-driven execution from local `checkpoints/`
-- CLI usage via `run_camel.py`
-
 ## Repository Layout
 
 - `run_camel.py`: public inference CLI
@@ -31,7 +25,7 @@ pip install -e .
 
 ## Checkpoints
 
-Checkpoints must be downloaded with the repository script:
+Checkpoints must be downloaded from huggingface `CAMEL-ECG/CAMEL` or with the repository script:
 
 ```bash
 bash scripts/download_checkpoints.sh
@@ -39,35 +33,50 @@ bash scripts/download_checkpoints.sh
 
 ## Usage
 
-```bash
-python run_camel.py \
-  --mode forecast \
-  --text "Forecast cardiac rhythm for the next 5 minutes." \
-  --ecg /path/to/ecg \
-  --device 0
-```
+* CAMEL is available in three modes: 
+  - `base`
+  - `ecgbench`
+  - `forecast`
 
-Available modes:
-- `base`
-- `ecgbench`
-- `forecast`
+  ```bash
+  python run_camel.py \
+    --mode forecast \
+    --text "Forecast cardiac rhythm for the next 5 minutes." \
+    --ecgs demo/08704_hr \
+    --device cuda:0
+  ```
 
-Required inputs:
+  ```bash
+  python run_camel.py \
+    --mode base \
+    --text "Compare the two ECG waveforms." \
+    --ecgs demo/12585_hr demo/12646_hr \
+    --device cuda:0
+  ```
 
-- `--text`: prompt/query text
-- `--ecg`: ECG input path/string consumed by the CLI
+* Optionally, you can set start, end, and leads with `--ecgs-config`.
 
-`--ecg` input formats:
+  ```bash
+  python run_camel.py \
+    --mode forecast \
+    --text "Forecast cardiac rhythm for the next 5 minutes." \
+    --ecgs demo/08704_hr \
+    --ecg-configs "start:0;end:5;use_leads:I,II" \
+    --device cuda:0
+  ```
 
-- Path to CSV waveform data (for example: `/data/sample.csv`)
-- Path to NumPy array files (`.npy` / `.npz`)
-- WFDB record path/prefix
-- Other dataset-specific ECG paths supported by the backend loader
+* Using `--text` and `--ecgs` defaults to text followed by the ecg in order. 
+For arbitrary text/ECG interleaving use `--json`.
+  ```bash
+  python run_camel.py --mode base --json demo/example_prompt.json --device cuda:0
+  ```
 
-Sampling flags:
+* Sampling flags:
+  - `--temperature`
+  - `--top-k`
+  - `--top-p`
+  - `--min-p`
+  - `--max-new-tokens`
 
-- `--temperature`
-- `--top-k`
-- `--top-p`
-- `--min-p`
-- `--max-new-tokens`
+Implementation notes:
+- ECG loading is currently implemented for WFDB-format inputs. To support additional formats, extend `src/read_ecg.py`.

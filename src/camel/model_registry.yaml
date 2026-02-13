@@ -1,0 +1,509 @@
+# Model Registry
+#
+# This file defines per-backbone configuration consumed by training and inference.
+# Fields overview:
+# - hf_id: Hugging Face model identifier for the frozen language model.
+# - prompt: Chat formatting tokens and roles used to build prompts
+#   - start_of_turn / end_of_turn: literal strings delimiting speaker turns
+#   - roles.user / roles.model: canonical role names for user/model
+#   - enforce_bos / enforce_eos: whether BOS/EOS must appear at the start/end
+# - tokenizer:
+#   - pad_token_strategy: how to set pad token ("eos" uses eos as pad)
+#   - require_bos / require_eos: tokenizer must expose these tokens
+# - architecture:
+#   - wrapper_class: import path to the ECG wrapper class (module.Class)
+#   - hidden_size_attrs: ordered config attribute paths to read hidden size
+#   - language_model_path_hints: ordered attribute paths to locate transformer layers
+#   - attn_implementation: preferred attention backend to use when loading
+# - lora_policy:
+#   - expect_language_only: LoRA must live under language/text model stacks
+#   - allowed_markers / blocked_markers: substrings used to validate LoRA placement
+#   - freeze_vision: freeze LoRA params under blocked stacks during training
+# - packing:
+#   - prompt_format: prompt/conversation template id
+#   - conversation: conversation role normalization and preprocessing
+#   - ecg_tokens: special tokens inserted to mark ECG structure
+models:
+  medgemma-27b-it:
+    hf_id: "google/medgemma-27b-text-it"
+    prompt:
+      start_of_turn: "<start_of_turn>"
+      end_of_turn: "<end_of_turn>\n"
+      roles:
+        user: "user"
+        model: "model"
+      enforce_bos: true
+      enforce_eos: true
+    tokenizer:
+      pad_token_strategy: "eos"
+      require_bos: true
+      require_eos: true
+      use_fast: true
+      add_prefix_space: false
+    architecture:
+      wrapper_class: "ecg_gemma_model.ECGGemmaPrefix"
+      hidden_size_attrs:
+        - "config.hidden_size"
+        - "config.text_config.hidden_size"
+      language_model_path_hints:
+        - "base_model.model.language_model.layers"
+        - "model.language_model.layers"
+        - "model.layers"
+      attn_implementation: "eager"
+      conv_out_dim: 64
+    lora_policy:
+      expect_language_only: true
+      allowed_markers:
+        - "language_model"
+        - ".model.layers."
+        - ".layers."
+      blocked_markers:
+        - "vision"
+        - "multi_modal"
+        - "projector"
+        - ".enc."
+        - "encoder_proj"
+      freeze_vision: true
+    packing:
+      prompt_format: "gemma_chat_v1"
+      conversation:
+        user_role_aliases: ["human", "user"]
+        model_role_aliases: ["gpt", "assistant"]
+        strip_image_from_roles: ["human"]
+        merge_system_with_first_user: true
+      ecg_tokens:
+        global_start: "<ecg_global_start>"
+        global_end: "<ecg_global_end>"
+        lead_start_template: "<ecg_lead_{lead_lower}_start>"
+        lead_end_template: "<ecg_lead_{lead_lower}_end>"
+        canonical_leads: ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
+  gemma-12b-it:
+    hf_id: "google/gemma-3-12b-it"
+    prompt:
+      start_of_turn: "<start_of_turn>"
+      end_of_turn: "<end_of_turn>\n"
+      roles:
+        user: "user"
+        model: "model"
+      enforce_bos: true
+      enforce_eos: true
+    tokenizer:
+      pad_token_strategy: "eos"
+      require_bos: true
+      require_eos: true
+      use_fast: true
+      add_prefix_space: false
+    architecture:
+      wrapper_class: "ecg_gemma_model.ECGGemmaPrefix"
+      hidden_size_attrs:
+        - "config.hidden_size"
+        - "config.text_config.hidden_size"
+      language_model_path_hints:
+        - "base_model.model.language_model.layers"
+        - "model.language_model.layers"
+        - "model.layers"
+      attn_implementation: "eager"
+      conv_out_dim: 64
+    lora_policy:
+      expect_language_only: true
+      allowed_markers:
+        - "language_model"
+        - ".model.layers."
+        - ".layers."
+      blocked_markers:
+        - "vision"
+        - "multi_modal"
+        - "projector"
+        - ".enc."
+        - "encoder_proj"
+      freeze_vision: true
+    packing:
+      prompt_format: "gemma_chat_v1"
+      conversation:
+        user_role_aliases: ["human", "user"]
+        model_role_aliases: ["gpt", "assistant"]
+        strip_image_from_roles: ["human"]
+        merge_system_with_first_user: true
+      ecg_tokens:
+        global_start: "<ecg_global_start>"
+        global_end: "<ecg_global_end>"
+        lead_start_template: "<ecg_lead_{lead_lower}_start>"
+        lead_end_template: "<ecg_lead_{lead_lower}_end>"
+        canonical_leads: ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
+  medgemma-4b-it:
+    hf_id: "google/medgemma-4b-it"
+    prompt:
+      start_of_turn: "<start_of_turn>"
+      end_of_turn: "<end_of_turn>\n"
+      roles:
+        user: "user"
+        model: "model"
+      enforce_bos: true
+      enforce_eos: true
+    tokenizer:
+      pad_token_strategy: "eos"
+      require_bos: true
+      require_eos: true
+      use_fast: true
+      add_prefix_space: false
+    architecture:
+      wrapper_class: "ecg_gemma_model.ECGGemmaPrefix"
+      hidden_size_attrs:
+        - "config.hidden_size"
+        - "config.text_config.hidden_size"
+      language_model_path_hints:
+        - "base_model.model.language_model.layers"
+        - "model.language_model.layers"
+        - "model.layers"
+      attn_implementation: "eager"
+      conv_out_dim: 64
+    lora_policy:
+      expect_language_only: true
+      allowed_markers:
+        - "language_model"
+        - ".model.layers."
+        - ".layers."
+      blocked_markers:
+        - "vision"
+        - "multi_modal"
+        - "projector"
+        - ".enc."
+        - "encoder_proj"
+      freeze_vision: true
+    packing:
+      prompt_format: "gemma_chat_v1"
+      conversation:
+        user_role_aliases: ["human", "user"]
+        model_role_aliases: ["gpt", "assistant"]
+        strip_image_from_roles: ["human"]
+        merge_system_with_first_user: true
+      ecg_tokens:
+        global_start: "<ecg_global_start>"
+        global_end: "<ecg_global_end>"
+        lead_start_template: "<ecg_lead_{lead_lower}_start>"
+        lead_end_template: "<ecg_lead_{lead_lower}_end>"
+        canonical_leads: ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
+  qwen3-4b-instruct:
+    hf_id: "Qwen/Qwen3-4B-Instruct-2507"
+    prompt:
+      start_of_turn: "<|im_start|>"
+      end_of_turn: "<|im_end|>"
+      roles:
+        user: "user"
+        model: "assistant"
+      enforce_bos: false
+      enforce_eos: false
+      allow_multiple_eos: true
+    tokenizer:
+      pad_token_strategy: "existing"
+      require_bos: false
+      require_eos: false
+      use_fast: true
+      add_prefix_space: false
+    architecture:
+      wrapper_class: "ecg_qwen_model.ECGQwenPrefix"
+      hidden_size_attrs:
+        - "config.hidden_size"
+      language_model_path_hints:
+        - "model.layers"
+        - "model.model.layers"
+      attn_implementation: "eager"
+      conv_out_dim: 64
+    lora_policy:
+      expect_language_only: true
+      allowed_markers:
+        - "model.layers."
+        - ".layers."
+      blocked_markers:
+        - "vision"
+        - "multi_modal"
+        - "projector"
+        - ".enc."
+        - "encoder_proj"
+      freeze_vision: false
+    packing:
+      prompt_format: "qwen_chat_v1"
+      conversation:
+        user_role_aliases: ["human", "user"]
+        model_role_aliases: ["gpt", "assistant"]
+        strip_image_from_roles: ["human"]
+        merge_system_with_first_user: true
+      ecg_tokens:
+        global_start: "<ecg_global_start>"
+        global_end: "<ecg_global_end>"
+        lead_start_template: "<ecg_lead_{lead_lower}_start>"
+        lead_end_template: "<ecg_lead_{lead_lower}_end>"
+        canonical_leads: ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
+  "qwen3-4b-instruct":
+    hf_id: "Qwen/Qwen3-4B"
+    prompt:
+      start_of_turn: "<|im_start|>"
+      end_of_turn: "<|im_end|>"
+      roles:
+        user: "user"
+        model: "assistant"
+      enforce_bos: false
+      enforce_eos: false
+      allow_multiple_eos: true
+    tokenizer:
+      pad_token_strategy: "existing"
+      require_bos: false
+      require_eos: false
+      use_fast: true
+      add_prefix_space: false
+    architecture:
+      wrapper_class: "ecg_qwen_model.ECGQwenPrefix"
+      hidden_size_attrs:
+        - "config.hidden_size"
+      language_model_path_hints:
+        - "model.layers"
+        - "model.model.layers"
+      attn_implementation: "eager"
+      conv_out_dim: 64
+    lora_policy:
+      expect_language_only: true
+      allowed_markers:
+        - "model.layers."
+        - ".layers."
+      blocked_markers:
+        - "vision"
+        - "multi_modal"
+        - "projector"
+        - ".enc."
+        - "encoder_proj"
+      freeze_vision: false
+    packing:
+      prompt_format: "qwen_chat_v1"
+      conversation:
+        user_role_aliases: ["human", "user"]
+        model_role_aliases: ["gpt", "assistant"]
+        strip_image_from_roles: ["human"]
+        merge_system_with_first_user: true
+      ecg_tokens:
+        global_start: "<ecg_global_start>"
+        global_end: "<ecg_global_end>"
+        lead_start_template: "<ecg_lead_{lead_lower}_start>"
+        lead_end_template: "<ecg_lead_{lead_lower}_end>"
+        canonical_leads: ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
+  gpt-oss-120b:
+    hf_id: "openai/gpt-oss-120b"
+    prompt:
+      start_of_turn: "<|start|>"
+      end_of_turn: "<|end|>"
+      roles:
+        user: "user"
+        model: "assistant"
+      enforce_bos: false
+      enforce_eos: false
+      allow_multiple_eos: true
+      system_prompt: |-
+        You are ChatGPT, a large language model trained by OpenAI.
+        Knowledge cutoff: 2024-06
+        Current date: 2025-06-28
+
+        Reasoning: low
+
+        # Valid channels: final. Channel must be included for every message.
+      developer_prompt: |-
+        # Instructions
+
+        You are trained to interpret electrocardiograms (ECGs) and must answer questions about them clearly and accurately.
+    tokenizer:
+      pad_token_strategy: "existing"
+      require_bos: false
+      require_eos: false
+      use_fast: true
+      add_prefix_space: false
+    architecture:
+      wrapper_class: "ecg_gptoss_model.ECGGptOssPrefix"
+      hidden_size_attrs:
+        - "config.hidden_size"
+      language_model_path_hints:
+        - "model.layers"
+        - "model.model.layers"
+      attn_implementation: "eager"
+      conv_out_dim: 64
+    lora_policy:
+      expect_language_only: true
+      allowed_markers:
+        - "model.layers."
+        - ".layers."
+      blocked_markers:
+        - "vision"
+        - "multi_modal"
+        - "projector"
+        - ".enc."
+        - "encoder_proj"
+      freeze_vision: false
+    packing:
+      prompt_format: "harmony_chat_v1"
+      conversation:
+        user_role_aliases: ["human", "user"]
+        model_role_aliases: ["assistant", "gpt"]
+        strip_image_from_roles: ["human"]
+        merge_system_with_first_user: false
+      ecg_tokens:
+        global_start: "<ecg_global_start>"
+        global_end: "<ecg_global_end>"
+        lead_start_template: "<ecg_lead_{lead_lower}_start>"
+        lead_end_template: "<ecg_lead_{lead_lower}_end>"
+        canonical_leads: ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
+  gemma-1b-it:
+    hf_id: "google/gemma-3-1b-it"
+    prompt:
+      start_of_turn: "<start_of_turn>"
+      end_of_turn: "<end_of_turn>\n"
+      roles:
+        user: "user"
+        model: "model"
+      enforce_bos: true
+      enforce_eos: true
+    tokenizer:
+      pad_token_strategy: "eos"
+      require_bos: true
+      require_eos: true
+      use_fast: true
+      add_prefix_space: false
+    architecture:
+      wrapper_class: "ecg_gemma_model.ECGGemmaPrefix"
+      hidden_size_attrs:
+        - "config.hidden_size"
+        - "config.text_config.hidden_size"
+      language_model_path_hints:
+        - "base_model.model.language_model.layers"
+        - "model.language_model.layers"
+        - "model.layers"
+      attn_implementation: "eager"
+      conv_out_dim: 64
+    lora_policy:
+      expect_language_only: true
+      allowed_markers:
+        - "language_model"
+        - ".model.layers."
+        - ".layers."
+      blocked_markers:
+        - "vision"
+        - "multi_modal"
+        - "projector"
+        - ".enc."
+        - "encoder_proj"
+      freeze_vision: true
+    packing:
+      prompt_format: "gemma_chat_v1"
+      conversation:
+        user_role_aliases: ["human", "user"]
+        model_role_aliases: ["gpt", "assistant"]
+        strip_image_from_roles: ["human"]
+        merge_system_with_first_user: true
+      ecg_tokens:
+        global_start: "<ecg_global_start>"
+        global_end: "<ecg_global_end>"
+        lead_start_template: "<ecg_lead_{lead_lower}_start>"
+        lead_end_template: "<ecg_lead_{lead_lower}_end>"
+        canonical_leads: ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
+  gemma-270m-it:
+    hf_id: "google/gemma-3-270m-it"
+    prompt:
+      start_of_turn: "<start_of_turn>"
+      end_of_turn: "<end_of_turn>\n"
+      roles:
+        user: "user"
+        model: "model"
+      enforce_bos: true
+      enforce_eos: true
+    tokenizer:
+      pad_token_strategy: "eos"
+      require_bos: true
+      require_eos: true
+      use_fast: true
+      add_prefix_space: false
+    architecture:
+      wrapper_class: "ecg_gemma_model.ECGGemmaPrefix"
+      hidden_size_attrs:
+        - "config.hidden_size"
+        - "config.text_config.hidden_size"
+      language_model_path_hints:
+        - "base_model.model.language_model.layers"
+        - "model.language_model.layers"
+        - "model.layers"
+      attn_implementation: "eager"
+      conv_out_dim: 64
+    lora_policy:
+      expect_language_only: true
+      allowed_markers:
+        - "language_model"
+        - ".model.layers."
+        - ".layers."
+      blocked_markers:
+        - "vision"
+        - "multi_modal"
+        - "projector"
+        - ".enc."
+        - "encoder_proj"
+      freeze_vision: true
+    packing:
+      prompt_format: "gemma_chat_v1"
+      conversation:
+        user_role_aliases: ["human", "user"]
+        model_role_aliases: ["gpt", "assistant"]
+        strip_image_from_roles: ["human"]
+        merge_system_with_first_user: true
+      ecg_tokens:
+        global_start: "<ecg_global_start>"
+        global_end: "<ecg_global_end>"
+        lead_start_template: "<ecg_lead_{lead_lower}_start>"
+        lead_end_template: "<ecg_lead_{lead_lower}_end>"
+        canonical_leads: ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
+  medgemma-27b-it:
+    hf_id: "google/medgemma-27b-text-it"
+    prompt:
+      start_of_turn: "<start_of_turn>"
+      end_of_turn: "<end_of_turn>\n"
+      roles:
+        user: "user"
+        model: "model"
+      enforce_bos: true
+      enforce_eos: true
+    tokenizer:
+      pad_token_strategy: "eos"
+      require_bos: true
+      require_eos: true
+      use_fast: true
+      add_prefix_space: false
+    architecture:
+      wrapper_class: "ecg_gemma_model.ECGGemmaPrefix"
+      hidden_size_attrs:
+        - "config.hidden_size"
+        - "config.text_config.hidden_size"
+      language_model_path_hints:
+        - "base_model.model.language_model.layers"
+        - "model.language_model.layers"
+        - "model.layers"
+      attn_implementation: "eager"
+      conv_out_dim: 64
+    lora_policy:
+      expect_language_only: true
+      allowed_markers:
+        - "language_model"
+        - ".model.layers."
+        - ".layers."
+      blocked_markers:
+        - "vision"
+        - "multi_modal"
+        - "projector"
+        - ".enc."
+        - "encoder_proj"
+      freeze_vision: true
+    packing:
+      prompt_format: "gemma_chat_v1"
+      conversation:
+        user_role_aliases: ["human", "user"]
+        model_role_aliases: ["gpt", "assistant"]
+        strip_image_from_roles: ["human"]
+        merge_system_with_first_user: true
+      ecg_tokens:
+        global_start: "<ecg_global_start>"
+        global_end: "<ecg_global_end>"
+        lead_start_template: "<ecg_lead_{lead_lower}_start>"
+        lead_end_template: "<ecg_lead_{lead_lower}_end>"
+        canonical_leads: ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]

@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch import Tensor
 from transformers import AutoModelForCausalLM
 
-from ecg_model_wrapper import ECGLanguageModelWrapper
+from camel.ecg_model_wrapper import ECGLanguageModelWrapper
 
 class ECGGemmaPrefix(ECGLanguageModelWrapper):
     """

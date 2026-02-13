@@ -12,33 +12,33 @@ from transformers import AutoModelForCausalLM
 from peft import LoraConfig
 
 # Local imports
-from model_introspect import resolve_hidden_size as _resolve_hidden_size
-from model_registry import load_registry
-from training_setup import initialize_tokenizer, build_packing_schema, register_ecg_special_tokens
-from model_init import build_wrapper, attach_lora, build_conv_encoder
-from ecg_text_packing import (
+from camel.model_introspect import resolve_hidden_size as _resolve_hidden_size
+from camel.model_registry import load_registry
+from camel.training_setup import initialize_tokenizer, build_packing_schema, register_ecg_special_tokens
+from camel.model_init import build_wrapper, attach_lora, build_conv_encoder
+from camel.ecg_text_packing import (
     _normalize_conversation,
     annotate_turn_parts_with_ids,
     build_structured_turn_parts,
     build_text_only_turn_parts,
     get_ecg_special_token_catalog,
 )
-from prompt_renderers import render_prompt_and_spans, turn_wrappers, assistant_generation_prefix
-from ecg_attention_masks import (
+from camel.prompt_renderers import render_prompt_and_spans, turn_wrappers, assistant_generation_prefix
+from camel.ecg_attention_masks import (
     ECGBlockLayout,
     ECGSequenceLayout,
     MaskBuildResult,
     ECGMaskStrategy,
     get_mask_strategy,
 )
-from assertions import (
+from camel.assertions import (
     assert_ecg_blocks_consistent,
     assert_ecg_part_bounds,
     assert_layout_specials_complete,
     assert_prefix_matches_segments,
     assert_prefix_split_complete,
 )
-from checkpoint_utils import (
+from camel.checkpoint_utils import (
     load_llava_and_lora,
     update_wrapper_language_model,
     extract_lora_config_from_checkpoints,
